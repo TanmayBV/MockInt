@@ -1,0 +1,110 @@
+# ===================== #
+#     Global Ignores    #
+# ===================== #
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.tmp
+*.bak
+
+# Logs & Env
+*.log
+*.env
+.env.*
+.envrc
+.vscode/
+.idea/
+*.code-workspace
+
+# ===================== #
+#     Python Backend    #
+# ===================== #
+
+# Bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Distribution
+build/
+dist/
+*.egg-info/
+.eggs/
+*.whl
+
+# Python tools
+.mypy_cache/
+.pytest_cache/
+.coverage
+.tox/
+pip-wheel-metadata/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# SQLite or local db
+*.sqlite3
+*.db
+
+# Uvicorn logs
+uvicorn.log
+
+# Models / Temp files (optional)
+backend/models/*
+!backend/models/.gitkeep
+
+# ===================== #
+#     Node Frontend     #
+# ===================== #
+
+# Dependencies
+frontend/node_modules/
+
+# Build output
+frontend/build/
+frontend/dist/
+
+# Next.js / Vite / Parcel / CRA
+frontend/.next/
+frontend/.parcel-cache/
+frontend/.turbo/
+
+# Env files
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+frontend/.env.development
+
+# Lock files (optional ignore if using npm ci)
+frontend/package-lock.json
+frontend/yarn.lock
+
+# ===================== #
+#        Docker         #
+# ===================== #
+.docker/
+docker-compose.override.yml
+
+# Docker files
+*.pid
+*.sock
+tmp/
+*.tar
+
+# ===================== #
+#    Coverage / Reports #
+# ===================== #
+coverage/
+htmlcov/
+reports/
+
+# ===================== #
+#    Environment Tools  #
+# ===================== #
+.envrc
+*.secrets
+.secret/
