@@ -1,7 +1,3 @@
-Absolutely! Here's the complete and professional `README.md` file for your **AI-powered Mock Interview Web App**, with **all the content** — features, tech stack, folder structure, Docker setup, environment setup, AI modules, CI/CD, development instructions, and contribution guide — **in one single file**.
-
----
-
 ## 📄 `README.md`
 
 ```markdown
