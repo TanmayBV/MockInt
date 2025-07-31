@@ -1,0 +1,29 @@
+# FastAPI & Web server
+fastapi
+uvicorn[standard]
+
+# Computer Vision (Face/Emotion Detection)
+opencv-python
+numpy
+dlib
+face_recognition
+
+# Deep Learning & ML
+tensorflow
+keras
+scikit-learn
+
+# Audio Analysis
+pyaudio
+librosa
+soundfile
+webrtcvad
+
+# Misc
+python-multipart        # For handling form-data
+aiofiles                # For async file handling
+requests
+
+# Optional: emotion detection via transformers (if used)
+# transformers
+# torch
