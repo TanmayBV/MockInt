@@ -238,6 +238,3 @@ Open an issue or reach out on [LinkedIn](https://linkedin.com).
 
 ```
 
-
-You're ready to push this project live 🚀
-```
