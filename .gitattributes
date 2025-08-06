@@ -1,0 +1,38 @@
+# Set default behavior to automatically normalize line endings
+* text=auto
+
+# Force LF for code and config files across the project
+*.py      text eol=lf
+*.js      text eol=lf
+*.jsx     text eol=lf
+*.ts      text eol=lf
+*.tsx     text eol=lf
+*.json    text eol=lf
+*.html    text eol=lf
+*.css     text eol=lf
+*.md      text eol=lf
+*.yml     text eol=lf
+*.yaml    text eol=lf
+*.env     text eol=lf
+*.sh      text eol=lf
+*.gitignore text eol=lf
+*.Dockerfile text eol=lf
+Dockerfile text eol=lf
+
+# Jupyter Notebooks
+*.ipynb   text eol=lf
+
+# Ignore binary files
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.ico     binary
+*.mp4     binary
+*.webm    binary
+*.pdf     binary
+
+# React build and node modules should remain untouched
+/frontend/build/** binary
+/frontend/dist/** binary
+/frontend/node_modules/** binary
