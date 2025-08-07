@@ -1,10 +1,24 @@
-from sqlalchemy import Column, Integer, String, Float
-from app.database import Base
+# backend/app/models.py
 
-class InterviewResult(Base):
-    __tablename__ = "interview_results"
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, index=True)
-    confidence_score = Column(Float)
-    emotion_score = Column(Float)
-    voice_score = Column(Float)
+from pydantic import BaseModel
+from typing import List
+from datetime import datetime
+from supabase_client import supabase  # Make sure this file exists
+
+# Request body model
+class InterviewData(BaseModel):
+    user_id: str
+    job_role: str
+    confidence: float
+    answers: List[str]
+    timestamp: datetime
+
+# Function to save interview data
+def save_interview_data(data: InterviewData):
+    response = supabase.table("interviews").insert(data.dict()).execute()
+    return response
+
+# Function to retrieve interviews for a user
+def get_user_interviews(user_id: str):
+    response = supabase.table("interviews").select("*").eq("user_id", user_id).execute()
+    return response.data

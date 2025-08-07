@@ -1,10 +1,10 @@
-from fastapi import FastAPI, File, UploadFile
+# app/main.py
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from emotion_detector import detect_emotion_from_image
+from routes import auth, emotion, interview
 
 app = FastAPI()
 
-# Allow all origins for now
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -12,8 +12,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/detect_emotion")
-async def detect_emotion(file: UploadFile = File(...)):
-    image_bytes = await file.read()
-    result = detect_emotion_from_image(image_bytes)
-    return result
+app.include_router(auth.router)
+app.include_router(emotion.router)
+app.include_router(interview.router)
