@@ -2,8 +2,8 @@
 
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
-from models import InterviewData, save_interview_data, get_user_interviews
-from auth_utils import decode_token  # Make sure this file exists and has decode_token
+from app.models import InterviewData, save_interview_data, get_user_interviews
+from app.auth_utils import decode_token 
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

@@ -3,7 +3,7 @@
 from pydantic import BaseModel
 from typing import List
 from datetime import datetime
-from supabase_client import supabase  # Make sure this file exists
+from app.supabase_client import supabase  # Make sure this file exists
 
 # Request body model
 class InterviewData(BaseModel):

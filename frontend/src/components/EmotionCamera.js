@@ -7,14 +7,23 @@ const EmotionCamera = () => {
   const [confidence, setConfidence] = useState(0);
 
   useEffect(() => {
+    // Start webcam
     navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-      videoRef.current.srcObject = stream;
-      videoRef.current.play();
-    });
+    const video = videoRef.current;
+    video.srcObject = stream;
 
+    // ✅ Play only after metadata is loaded
+    video.onloadedmetadata = () => {
+      video.play().catch((err) => {
+        console.error("Video play error:", err);
+      });
+    };
+  });
+
+    // Set interval to capture frames
     const interval = setInterval(() => {
       captureAndSendFrame();
-    }, 1000); // Capture every 1 second
+    }, 2000); // every 1 second
 
     return () => clearInterval(interval);
   }, []);
@@ -27,25 +36,45 @@ const EmotionCamera = () => {
 
     const context = canvas.getContext("2d");
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
     canvas.toBlob(async (blob) => {
       const formData = new FormData();
       formData.append("file", blob, "frame.jpg");
 
-      const response = await fetch("http://127.0.0.1:8000/detect_emotion/", {
-        method: "POST",
-        body: formData,
-      });
+      try {
+        const response = await fetch("http://127.0.0.1:8000/detect_emotion", {
+          method: "POST",
+          body: formData,
+        });
 
-      const data = await response.json();
-      setEmotion(data.emotion);
-      setConfidence((data.confidence * 100).toFixed(2));
+        const data = await response.json();
+        console.log("Received:", data);
+
+        setEmotion(data.emotion.emotion); 
+        setConfidence((data.emotion.confidence * 100).toFixed(2)); 
+
+      } catch (err) {
+        console.error("Emotion detection error:", err);
+      }
     }, "image/jpeg");
   };
 
   return (
     <div style={{ position: "relative", width: 640, height: 480 }}>
-      <video ref={videoRef} width={640} height={480} style={{ borderRadius: 10 }} />
-      <canvas ref={canvasRef} width={640} height={480} style={{ display: "none" }} />
+      <video
+        ref={videoRef}
+        width={640}
+        height={480}
+        style={{ borderRadius: 10 }}
+      />
+      <canvas
+        ref={canvasRef}
+        width={640}
+        height={480}
+        style={{ display: "none" }}
+      />
+
+      {/* ✅ Emotion Overlay Display */}
       <div
         style={{
           position: "absolute",
@@ -58,7 +87,8 @@ const EmotionCamera = () => {
           fontSize: "18px",
         }}
       >
-        Emotion: <strong>{emotion}</strong> <br />
+        Emotion: <strong>{emotion}</strong>
+        <br />
         Confidence: <strong>{confidence}%</strong>
       </div>
     </div>
