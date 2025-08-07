@@ -1,28 +1,27 @@
 from deepface import DeepFace
-import numpy as np
 import cv2
-from PIL import Image
-import io
+import numpy as np
 
-def detect_emotion_from_frame(image_bytes):
+def detect_emotion_from_image(image_bytes):
     try:
-        # Convert image bytes to a numpy array
+        # Decode image bytes to OpenCV format
         np_arr = np.frombuffer(image_bytes, np.uint8)
         img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
-        if img is None:
-            raise ValueError("Failed to decode image.")
+        # Analyze with DeepFace (emotion only)
+        result = DeepFace.analyze(img_path=img, actions=['emotion'], enforce_detection=False)
 
-        # Analyze the image with DeepFace (disable strict face detection)
-        result = DeepFace.analyze(
-            img_path=img,
-            actions=['emotion'],
-            enforce_detection=False
-        )
+        dominant_emotion = result[0]['dominant_emotion']
+        emotion_score = result[0]['emotion'][dominant_emotion]
 
-        # Extract and return the dominant emotion
-        return result[0]["dominant_emotion"]
+        return {
+            "emotion": dominant_emotion,
+            "confidence": float(round(emotion_score / 100, 2))
+        }
 
     except Exception as e:
-        print(f"[Emotion Detection Error] {str(e)}")
-        return "error"
+        return {
+            "emotion": "error",
+            "confidence": 0.0,
+            "message": str(e)
+        }

@@ -1,27 +1,19 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from emotion_detector import detect_emotion_from_frame
+from emotion_detector import detect_emotion_from_image
 
 app = FastAPI()
 
-# Allow frontend (React running on localhost:3000) to access backend
+# Allow all origins for now
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # or ["*"] to allow all
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.get("/")
-async def root():
-    return {"message": "Mock Interview Emotion Detection API running."}
-
 @app.post("/detect_emotion")
 async def detect_emotion(file: UploadFile = File(...)):
-    try:
-        contents = await file.read()
-        emotion = detect_emotion_from_frame(contents)
-        return {"emotion": emotion}
-    except Exception as e:
-        return {"error": str(e)}
+    image_bytes = await file.read()
+    result = detect_emotion_from_image(image_bytes)
+    return result

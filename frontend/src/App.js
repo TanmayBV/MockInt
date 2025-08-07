@@ -1,11 +1,9 @@
-import React from "react";
-import CameraComponent from "./CameraComponent";
+import EmotionCamera from "./EmotionCamera";
 
 function App() {
   return (
-    <div className="App">
-      <h2>Mock Interview Emotion Detector</h2>
-      <CameraComponent />
+    <div>
+      <EmotionCamera />
     </div>
   );
 }
