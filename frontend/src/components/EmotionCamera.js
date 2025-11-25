@@ -14,6 +14,12 @@ const EmotionCamera = () => {
   const [confidence, setConfidence] = useState(0);
   const [confidenceData, setConfidenceData] = useState([]);
   const intervalRef = useRef(null);
+  const audioIntervalRef = useRef(null);
+  const audioStreamRef = useRef(null);
+  const [voiceText, setVoiceText] = useState("Listening...");
+  const [fullTranscript, setFullTranscript] = useState("");
+  const [fillerCounts, setFillerCounts] = useState({});
+  const [interviewId, setInterviewId] = useState(null);
   const [questions, setQuestions] = useState(Array.isArray(initialQuestions) ? initialQuestions : []);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
@@ -40,7 +46,7 @@ const EmotionCamera = () => {
     const video = videoRef.current;
     video.srcObject = stream;
 
-    // ✅ Play only after metadata is loaded
+    // Play only after metadata is loaded
     video.onloadedmetadata = () => {
       video.play().catch((err) => {
         console.error("Video play error:", err);
@@ -55,6 +61,39 @@ const EmotionCamera = () => {
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Create interview row at start
+    const start = async () => {
+      try {
+        const payload = { job_role: jobRole || 'Interview', interview_name: interviewName || undefined, level: level || undefined };
+        const res = await API.post('/interview/start', payload);
+        if (res.data && res.data.id) setInterviewId(res.data.id);
+      } catch (e) {
+        console.error('Failed to start interview row:', e);
+      }
+    };
+    start();
+
+    // Start microphone
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      audioStreamRef.current = stream;
+
+      // Kick off periodic short recordings (every 4s, each ~3s)
+      audioIntervalRef.current = setInterval(() => {
+        startOneShotAudioRecording();
+      }, 4000);
+    }).catch((err) => {
+      console.error("Microphone access error:", err);
+    });
+
+    return () => {
+      if (audioIntervalRef.current) clearInterval(audioIntervalRef.current);
+      if (audioStreamRef.current) {
+        audioStreamRef.current.getTracks().forEach((t) => t.stop());
+      }
     };
   }, []);
 
@@ -95,32 +134,96 @@ const EmotionCamera = () => {
     }, "image/jpeg");
   };
 
+  const startOneShotAudioRecording = () => {
+    try {
+      const stream = audioStreamRef.current;
+      if (!stream) return;
+
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus' : 'audio/webm';
+      const recorder = new MediaRecorder(stream, { mimeType });
+      const chunks = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunks.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        try {
+          if (!chunks.length) { setVoiceText('No audio'); return; }
+          const blob = new Blob(chunks, { type: 'audio/webm' });
+          if (!blob || blob.size === 0) return;
+          const formData = new FormData();
+          formData.append('file', blob, 'clip.webm');
+
+          const { data } = await API.post('/transcribe_voice/', formData);
+          if (data && data.transcript) {
+            const text = data.transcript.text || '';
+            setVoiceText(text);
+            setFullTranscript((prev) => {
+              const combined = (prev ? prev + ' ' : '') + text;
+              return combined.trim();
+            });
+            const fillers = data.transcript.filler_words || {};
+            if (fillers && typeof fillers === 'object') {
+              setFillerCounts((prev) => {
+                const next = { ...prev };
+                Object.entries(fillers).forEach(([w, c]) => {
+                  next[w] = (next[w] || 0) + (Number(c) || 0);
+                });
+                return next;
+              });
+            }
+          } else if (data && data.detail) {
+            setVoiceText('Error');
+          }
+        } catch (err) {
+          console.error('Voice emotion detection error:', err);
+          setVoiceText('Error');
+        }
+      };
+
+      // Provide a timeslice so dataavailable fires periodically
+      recorder.start(250);
+      setTimeout(() => {
+        try { recorder.stop(); } catch {}
+      }, 3000);
+    } catch (err) {
+      console.error('Failed to start audio recording:', err);
+    }
+  };
+
   const handleEndInterview = async () => {
     try {
       // stop interval
       if (intervalRef.current) clearInterval(intervalRef.current);
+      if (audioIntervalRef.current) clearInterval(audioIntervalRef.current);
       // stop camera stream
       const video = videoRef.current;
       if (video && video.srcObject) {
         const tracks = video.srcObject.getTracks();
         tracks.forEach((t) => t.stop());
       }
+      // stop mic stream
+      if (audioStreamRef.current) {
+        audioStreamRef.current.getTracks().forEach((t) => t.stop());
+      }
 
-      // Extract pre-interview data from navigation state
-      const { interviewName, jobRole, level, questions } = location.state || {};
-
-      // Prepare payload
-      const payload = {
-        job_role: jobRole || 'Interview',
-        confidence_data: confidenceData,
-        answers: [],
-        timestamp: new Date().toISOString(),
-        interview_name: interviewName || undefined,
-        level: level || undefined,
+      // Prepare final PATCH payload
+      const finalPayload = {
+        answer: fullTranscript,
+        filler_words: fillerCounts,
+        confidence: (confidenceData && confidenceData.length)
+          ? confidenceData.reduce((acc, d) => acc + (d.confidence * d.duration), 0) /
+            confidenceData.reduce((acc, d) => acc + d.duration, 0)
+          : 0
       };
 
-      console.log('Submitting interview:', payload);
-      await API.post('/interview/', payload);
+      if (interviewId) {
+        await API.patch(`/interview/${interviewId}`, finalPayload);
+      } else {
+        console.warn('No interviewId found; skipping final save.');
+      }
     } catch (err) {
       console.error('Failed to submit interview:', err);
     } finally {
@@ -154,12 +257,21 @@ const EmotionCamera = () => {
                   />
                   <canvas ref={canvasRef} className="hidden" width={640} height={480} />
 
-                  {/* Emotion Overlay Display */}
+                  {/* Combined Overlay: Face + Voice (Transcript) */}
                   <div className="absolute top-4 left-4 bg-black/70 backdrop-blur border border-white/20 text-white px-4 py-3 rounded-xl shadow-lg">
-                    <div className="text-sm font-medium text-gray-300">Emotion</div>
-                    <div className="text-lg font-semibold text-white">{emotion}</div>
-                    <div className="text-sm font-medium text-gray-300 mt-1">Confidence</div>
-                    <div className="text-lg font-semibold text-blue-400">{confidence}%</div>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <div className="text-sm font-medium text-gray-300">Face Emotion</div>
+                        <div className="text-lg font-semibold text-white">{emotion}</div>
+                        <div className="text-sm font-medium text-gray-300 mt-1">Confidence</div>
+                        <div className="text-lg font-semibold text-blue-400">{confidence}%</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-300">Voice Transcript</div>
+                        <div className="text-sm font-medium text-gray-300 mt-1">Latest</div>
+                        <div className="text-base font-semibold text-green-300 max-w-md break-words">{voiceText}</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

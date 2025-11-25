@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.utils.emotion_detector import detect_emotion_from_image
 from app.routers.auth import router as auth_router
 from app.routers.interview import router as interview_router
+from app.routers.voice import router as voice_router
 from app.supabase_client import supabase
 from datetime import datetime
 
@@ -20,6 +21,7 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_router)
 app.include_router(interview_router)
+app.include_router(voice_router)
 
 @app.get("/")
 async def root():

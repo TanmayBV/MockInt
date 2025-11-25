@@ -7,5 +7,9 @@ librosa
 numpy
 pydantic
 opencv-python
-deepface
-moviepy
+# moviepy removed in favor of pydub for lighter audio conversion
+pydub
+imageio-ffmpeg
+soundfile
+SpeechRecognition
+pyaudio

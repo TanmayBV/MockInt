@@ -146,7 +146,7 @@ const Dashboard = () => {
                               {formatConfidence(interview.confidence)}
                             </span>
                           </div>
-                          {interview.answers && interview.answers.length > 0 && (
+                          {Array.isArray(interview.answers) && interview.answers.length > 0 ? (
                             <div className="mt-3">
                               <p className="text-sm text-gray-400 mb-2">Answers ({interview.answers.length}):</p>
                               <div className="space-y-1">
@@ -155,6 +155,28 @@ const Dashboard = () => {
                                 ))}
                                 {interview.answers.length > 2 && (
                                   <p className="text-sm text-gray-500">+{interview.answers.length - 2} more answers</p>
+                                )}
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {(!Array.isArray(interview.answers) && interview.answer) && (
+                            <div className="mt-3">
+                              <p className="text-sm text-gray-400 mb-2">Answer</p>
+                              <p className="text-sm text-gray-300 line-clamp-2 break-words">{interview.answer}</p>
+                            </div>
+                          )}
+
+                          {interview.filler_words && (
+                            <div className="mt-3">
+                              <p className="text-sm text-gray-400 mb-2">Filler Words</p>
+                              <div className="flex flex-wrap gap-2">
+                                {Object.keys(interview.filler_words).length === 0 ? (
+                                  <span className="text-xs text-gray-500">None</span>
+                                ) : (
+                                  Object.entries(interview.filler_words).map(([w, c]) => (
+                                    <span key={w} className="text-xs px-2 py-1 rounded bg-gray-700/50 text-gray-200 border border-white/10">{w}: {c}</span>
+                                  ))
                                 )}
                               </div>
                             </div>
