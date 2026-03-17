@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+python-multipart
+librosa
+numpy
+pydantic
+opencv-python
+# moviepy removed in favor of pydub for lighter audio conversion
+pydub
+imageio-ffmpeg
+soundfile
+SpeechRecognition
+pyaudio

@@ -20,6 +20,15 @@ Thumbs.db
 *.code-workspace
 
 # ===================== #
+#  Python Virtual Env   #
+# ===================== #
+venv/
+.venv/
+env/
+.env/
+
+
+# ===================== #
 #     Python Backend    #
 # ===================== #
 
